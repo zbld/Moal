@@ -1241,7 +1241,12 @@ class MultiBranchCosineIncrementalNet_adapt_AC(BaseNet):
         # else:
         #     self.backbones.append(get_backbone(self.args))  # the pretrained model itself
 
-        self.backbones.append(tuned_model.backbone)  # adappted tuned model
+# 适应多卡
+        if hasattr(tuned_model, "module"):
+            self.backbones.append(tuned_model.module.backbone)
+        else:
+            self.backbones.append(tuned_model.backbone)
+        # self.backbones.append(tuned_model.backbone)  # adappted tuned model
 
         self._feature_dim = self.backbones[0].out_dim * len(self.backbones)
         self.fc = self.generate_fc(self._feature_dim, 0, self.args['init_cls'], cosine_fc=True)
