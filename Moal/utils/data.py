@@ -55,13 +55,13 @@ class iCIFAR100(iData):
 
     class_order = np.arange(100).tolist()
     def download_data(self):
-        data_path = "/root/autodl-tmp/jww/data/cifar-100-python"
+        data_path = "/home/shihan/data"
         if os.path.exists(data_path):
-            train_dataset = datasets.cifar.CIFAR100("/root/autodl-tmp/data", train=True, download=False)
-            test_dataset = datasets.cifar.CIFAR100("/root/autodl-tmp/data", train=False, download=False)
+            train_dataset = datasets.cifar.CIFAR100("/home/shihan/data", train=True, download=False)
+            test_dataset = datasets.cifar.CIFAR100("/home/shihan/data", train=False, download=False)
         else:
-            train_dataset = datasets.cifar.CIFAR100("/root/autodl-tmp/data", train=True, download=True)
-            test_dataset = datasets.cifar.CIFAR100("/root/autodl-tmp/data", train=False, download=True)
+            train_dataset = datasets.cifar.CIFAR100("/home/shihan/data", train=True, download=True)
+            test_dataset = datasets.cifar.CIFAR100("/home/shihan/data", train=False, download=True)
         self.train_data, self.train_targets = train_dataset.data, np.array(
             train_dataset.targets
         )
@@ -140,8 +140,8 @@ class iCIFAR224(iData):
 
         self.class_order = np.arange(100).tolist()
     def download_data(self):
-        train_dataset = datasets.cifar.CIFAR100("/root/autodl-tmp/data/cifar224", train=True, download=True)
-        test_dataset = datasets.cifar.CIFAR100("/root/autodl-tmp/data/cifar224", train=False, download=True)
+        train_dataset = datasets.cifar.CIFAR100("/home/shihan/data", train=True, download=True)
+        test_dataset = datasets.cifar.CIFAR100("/home/shihan/data", train=False, download=True)
         self.train_data, self.train_targets = train_dataset.data, np.array(
             train_dataset.targets
         )
@@ -229,8 +229,8 @@ class iImageNetR(iData):
 
     def download_data(self):
         # assert 0, "You should specify the folder of your dataset"
-        train_dir = "/root/autodl-tmp/jww/data/imagenet-r/train"
-        test_dir = "/root/autodl-tmp/jww/data/imagenet-r/test"
+        train_dir = "/data2/yuming/NC_CLPM/data/imagenet-r/train"
+        test_dir = "/data2/yuming/NC_CLPM/data/imagenet-r/test"
 
         train_dset = datasets.ImageFolder(train_dir)
         test_dset = datasets.ImageFolder(test_dir)
@@ -250,8 +250,8 @@ class iImageNetA(iData):
 
     def download_data(self):
         # assert 0, "You should specify the folder of your dataset"
-        train_dir = "/root/autodl-tmp/jww/data/imagenet-a/train"
-        test_dir = "/root/autodl-tmp/jww/data/imagenet-a/test"
+        train_dir = "/data2/yuming/NC_CLPM/data/imagenet-a/train"
+        test_dir = "/data2/yuming/NC_CLPM/data/imagenet-a/test"
 
         train_dset = datasets.ImageFolder(train_dir)
         test_dset = datasets.ImageFolder(test_dir)
@@ -314,8 +314,8 @@ class omnibenchmark(iData):
 
     def download_data(self):
         # assert 0, "You should specify the folder of your dataset"
-        train_dir = "/root/autodl-tmp/jww/data/omnibenchmark/train"
-        test_dir = "/root/autodl-tmp/jww/data/omnibenchmark/test"
+        train_dir = "/data2/yuming/NC_CLPM/data/omnibenchmark/train"
+        test_dir = "/data2/yuming/NC_CLPM/data/omnibenchmark/test"
 
         train_dset = datasets.ImageFolder(train_dir)
         test_dset = datasets.ImageFolder(test_dir)
