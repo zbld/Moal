@@ -7,9 +7,11 @@
     "shuffle": true,
     "init_cls": 10,
     "increment": 10,
-    "model_name": "adapt_ac_com_sdc_ema_auto",
+    "model_name": "MoAL",
     "backbone_type": "pretrained_vit_b16_224_adapter",
-    "device": [0],
+    "device": [
+        "1"
+    ],
     "seed": [
         1993
     ],
