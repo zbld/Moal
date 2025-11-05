@@ -604,9 +604,6 @@
 
 
 
-
-
-
 import logging
 import numpy as np
 import torch
@@ -623,17 +620,17 @@ from backbone.linears import CosineLinear
 from utils.toolkit import target2onehot, tensor2numpy
 import copy
 from torch.utils.data import DataLoader, Dataset, TensorDataset, random_split
+import os
 
 num_workers = 8
 
-# 创建一个新的 全连接层
-class SimpleNN(nn.Module):  
-    def __init__(self, input_size, output_size, dtype=torch.float32):  
-        super(SimpleNN, self).__init__()  
+class SimpleNN(nn.Module):
+    def __init__(self, input_size, output_size, dtype=torch.float32):
+        super(SimpleNN, self).__init__()
         self.fc = nn.Linear(input_size, output_size)
-  
-    def forward(self, x):  
-        if x.dtype != self.fc.weight.dtype:  
+
+    def forward(self, x):
+        if x.dtype != self.fc.weight.dtype:
             x = x.to(dtype=self.fc.weight.dtype)
         x = self.fc(x)
         return x
@@ -649,11 +646,11 @@ class Learner(BaseLearner):
             self.batch_size = 128
             self.init_lr = args["init_lr"] if args["init_lr"] is not None else 0.01
         else:
-            # self._network = SimpleVitNet(args, True)
             self._network = SimpleVitNet_AL(args, True)
             self.batch_size = args["batch_size"]
             self.init_lr = args["init_lr"]
             self.progressive_lr = args["progressive_lr"]
+
         self.model_hidden = args["Hidden"]
         self.weight_decay = args["weight_decay"] if args["weight_decay"] is not None else 0.0005
         self.min_lr = args['min_lr'] if args['min_lr'] is not None else 1e-8
@@ -663,11 +660,15 @@ class Learner(BaseLearner):
         self._cov_matrix = []
         self._std_deviations_matrix = []
 
+        # 必须保证 self._multiple_gpus 初始化
+        self._multiple_gpus = args.get("device", [0])
+        print("DEBUG: self._multiple_gpus =", self._multiple_gpus)
+        print("DEBUG: torch.cuda.device_count() =", torch.cuda.device_count())
+        print("DEBUG: CUDA_VISIBLE_DEVICES =", os.environ.get('CUDA_VISIBLE_DEVICES'))
+
     def after_task(self):
         self._known_classes = self._total_classes
-        # calculate before update the old_model
-
-        net = self._network.module if hasattr(self._network, "module") else self._network
+        net = self._get_model()
         self._old_network = net.copy().freeze()
         if hasattr(self._old_network, "module"):
             self.old_network_module_ptr = self._old_network.module
@@ -678,41 +679,49 @@ class Learner(BaseLearner):
         self._cur_task += 1
         self._total_classes = self._known_classes + data_manager.get_task_size(self._cur_task)
         if self._cur_task == 0:
-            net = self._network.module if hasattr(self._network, "module") else self._network
+            net = self._get_model()
             net.fc = CosineLinear(net.feature_dim, self._total_classes)
         logging.info("Learning on {}-{}".format(self._known_classes, self._total_classes))
 
-        train_dataset = data_manager.get_dataset(np.arange(self._known_classes, self._total_classes), source="train",
-                                                 mode="train", )
+        train_dataset = data_manager.get_dataset(
+            np.arange(self._known_classes, self._total_classes),
+            source="train", mode="train")
         self.train_dataset = train_dataset
         self.data_manager = data_manager
-        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=num_workers)
+        self.train_loader = DataLoader(
+            train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=num_workers)
 
-        test_dataset = data_manager.get_dataset(np.arange(0, self._total_classes), source="test", mode="test")
-        self.test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=num_workers)
+        test_dataset = data_manager.get_dataset(
+            np.arange(0, self._total_classes), source="test", mode="test")
+        self.test_loader = DataLoader(
+            test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=num_workers)
 
-        train_dataset_for_protonet = data_manager.get_dataset(np.arange(self._known_classes, self._total_classes),
-                                                              source="train", mode="test", )
-        self.train_loader_for_protonet = DataLoader(train_dataset_for_protonet, batch_size=self.batch_size,
-                                                    shuffle=True, num_workers=num_workers)
+        train_dataset_for_protonet = data_manager.get_dataset(
+            np.arange(self._known_classes, self._total_classes),
+            source="train", mode="test")
+        self.train_loader_for_protonet = DataLoader(
+            train_dataset_for_protonet, batch_size=self.batch_size, shuffle=True, num_workers=num_workers)
 
+        # 多卡初始化，只此处赋值。不要再全局/后续地方 .module
         if len(self._multiple_gpus) > 1:
             print('Multiple GPUs')
-            self._network = nn.DataParallel(self._network, self._multiple_gpus)
+            self._network = nn.DataParallel(self._network, device_ids=self._multiple_gpus)
+
+        # 后面的 self._network forward、optimizer 都安全用 self._network
         self._train(self.train_loader, self.test_loader, self.train_loader_for_protonet)
-        # 训练结束后有时self._network还是DataParallel，有时已经被construct_dual_branch_network等替换掉
-        # 所以解包要用hasattr判断
-        if hasattr(self._network, "module"):
-            self._network = self._network.module
+        # 不要解包 self._network = self._network.module
+
+    def _get_model(self, model=None):
+        # DataParallel 取.module，否则原模型
+        if model is None:
+            model = self._network
+        return model.module if hasattr(model, "module") else model
 
     def _train(self, train_loader, test_loader, train_loader_for_protonet):
-
-        net = self._network.module if hasattr(self._network, "module") else self._network
-
+        net = self._get_model()
         net.to(self._device)
 
         if self._cur_task == 0:
-            # show total parameters and trainable parameters
             total_params = sum(p.numel() for p in net.parameters())
             print(f'{total_params:,} total parameters.')
             total_trainable_params = sum(
@@ -727,15 +736,15 @@ class Learner(BaseLearner):
                                       weight_decay=self.weight_decay)
             elif self.args['optimizer'] == 'adam':
                 optimizer = optim.AdamW(net.parameters(), lr=self.init_lr, weight_decay=self.weight_decay)
-            scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.args['tuned_epoch'],
-                                                             eta_min=self.min_lr)
+            scheduler = optim.lr_scheduler.CosineAnnealingLR(
+                optimizer, T_max=self.args['tuned_epoch'], eta_min=self.min_lr)
             self._init_train(train_loader, test_loader, optimizer, scheduler)
             self.construct_dual_branch_network()
-            net = self._network.module if hasattr(self._network, "module") else self._network
+            net = self._get_model()
             net.update_fc(self._total_classes, self.args['Hidden'])
 
         else:
-            net = self._network.module if hasattr(self._network, "module") else self._network
+            net = self._get_model()
             net.update_fc(self._total_classes, self.args['Hidden'], cosine_fc=True)
             net.update_fc(self._total_classes, self.args['Hidden'])
             for param in net.ac_model.parameters():
@@ -751,14 +760,13 @@ class Learner(BaseLearner):
             elif self.args['optimizer'] == 'adam':
                 optimizer = optim.AdamW(net.parameters(), lr=self.progressive_lr,
                                         weight_decay=self.weight_decay)
-            scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.args['progreesive_epoch'],
-                                                             eta_min=self.min_lr)
+            scheduler = optim.lr_scheduler.CosineAnnealingLR(
+                optimizer, T_max=self.args['progreesive_epoch'], eta_min=self.min_lr)
             self._progreessive_train(train_loader, test_loader, optimizer, scheduler)
 
         if self._cur_task == 0:
             self._compute_means()
             net.to(self._device)
-            # AL training process
             self.cls_align(train_loader, net)
         else:
             self._compute_means()
@@ -766,19 +774,18 @@ class Learner(BaseLearner):
             self._compute_relations()
             self._build_feature_set()
             net.to(self._device)
-            # AL training process
             self.IL_align(train_loader, net)
             self.cali_weight(self._feature_trainset, net)
 
     def construct_dual_branch_network(self):
         network = MultiBranchCosineIncrementalNet_adapt_AC(self.args, True)
-        net = self._network.module if hasattr(self._network, "module") else self._network
+        net = self._get_model()
         network.construct_dual_branch_network(net)
         self._network = network.to(self._device)
 
     def _init_train(self, train_loader, test_loader, optimizer, scheduler):
         prog_bar = tqdm(range(self.args['tuned_epoch']))
-        net = self._network.module if hasattr(self._network, "module") else self._network
+        net = self._get_model()
         for _, epoch in enumerate(prog_bar):
             net.train()
             losses = 0.0
@@ -815,8 +822,7 @@ class Learner(BaseLearner):
 
     def _progreessive_train(self, train_loader, test_loader, optimizer, scheduler):
         prog_bar = tqdm(range(self.args['progreesive_epoch']))
-        net = self._network.module if hasattr(self._network, "module") else self._network
-
+        net = self._get_model()
         EMA_model = net.copy().freeze()
         alpha = self.args['alpha']
 
@@ -865,42 +871,30 @@ class Learner(BaseLearner):
 
     def cls_align(self, trainloader, model):
         model = model.module if hasattr(model, 'module') else model
-
         embedding_list = []
         label_list = []
-
-        # AL training process
         model = model.eval()
-
         auto_cor = torch.zeros(model.ac_model.fc[-1].weight.size(1), model.ac_model.fc[-1].weight.size(1)).to(
             self._device)
         crs_cor = torch.zeros(model.ac_model.fc[-1].weight.size(1), self._total_classes).to(self._device)
-
         with torch.no_grad():
             pbar = tqdm(enumerate(trainloader), desc='Alignment', total=len(trainloader), unit='batch')
             for i, batch in pbar:
                 (_, data, label) = batch
                 images = data.to(self._device)
                 target = label.to(self._device)
-
                 label_list.append(target.cpu())
-
                 feature = model(images)["features"]
                 new_activation = model.ac_model.fc[:2](feature)
-
                 embedding_list.append(new_activation.cpu())
-
                 label_onehot = F.one_hot(target, self._total_classes).float()
                 auto_cor += torch.t(new_activation) @ new_activation
                 crs_cor += torch.t(new_activation) @ (label_onehot)
-
         embedding_list = torch.cat(embedding_list, dim=0)
         label_list = torch.cat(label_list, dim=0)
         Y = target2onehot(label_list, self._total_classes)
-
         ridge = self.optimise_ridge_parameter(embedding_list, Y)
         logging.info("gamma {}".format(ridge))
-
         print('numpy inverse')
         R = np.mat(auto_cor.cpu().numpy() + ridge * np.eye(model.ac_model.fc[-1].weight.size(1))).I
         R = torch.tensor(R).float().to(self._device)
@@ -916,7 +910,7 @@ class Learner(BaseLearner):
         Q_val = Features[0:num_val_samples, :].T @ Y[0:num_val_samples, :]
         G_val = Features[0:num_val_samples, :].T @ Features[0:num_val_samples, :]
         for ridge in ridges:
-            Wo = torch.linalg.solve(G_val + ridge*torch.eye(G_val.size(dim=0)), Q_val).T #better nmerical stability than .inv
+            Wo = torch.linalg.solve(G_val + ridge*torch.eye(G_val.size(dim=0)), Q_val).T
             Y_train_pred = Features[num_val_samples::,:] @ Wo.T
             losses.append(F.mse_loss(Y_train_pred, Y[num_val_samples::, :]))
         ridge = ridges[np.argmin(np.array(losses))]
@@ -925,46 +919,39 @@ class Learner(BaseLearner):
 
     def IL_align(self, trainloader, model):
         model = model.module if hasattr(model, 'module') else model
-
         model = model.eval()
-
         W = (model.ac_model.fc[-1].weight.t()).float()
         R = copy.deepcopy(self.R.float())
-
         with torch.no_grad():
             pbar = tqdm(enumerate(trainloader), desc='Alignment', total=len(trainloader), unit='batch')
             for i, batch in pbar:
                 (_, data, label) = batch
                 images = data.to(self._device)
                 target = label.to(self._device)
-
                 feature = model(images)["features"]
                 new_activation = model.ac_model.fc[:2](feature)
                 label_onehot = F.one_hot(target, self._total_classes).float()
-
                 R = R - R @ new_activation.t() @ torch.pinverse(
                     torch.eye(new_activation.size(0)).to(self._device) +
                     new_activation @ R @ new_activation.t()) @ new_activation @ R
-
                 W = W + R @ new_activation.t() @ (label_onehot - new_activation @ W)
-
         print('numpy inverse')
         model.ac_model.fc[-1].weight = torch.nn.parameter.Parameter(torch.t(W.float()))
         self.R = R
         del R
 
     def _compute_means(self):
-        net = self._network.module if hasattr(self._network, "module") else self._network
+        net = self._get_model()
         with torch.no_grad():
             for class_idx in range(self._known_classes, self._total_classes):
-                data, targets, idx_dataset = self.data_manager.get_dataset(np.arange(class_idx, class_idx + 1),
-                                                                           source='train',
-                                                                           mode='test', ret_data=True)
-                idx_loader = DataLoader(idx_dataset, batch_size=self.args["batch_size"], shuffle=False, num_workers=4)
+                data, targets, idx_dataset = self.data_manager.get_dataset(
+                    np.arange(class_idx, class_idx + 1), source='train',
+                    mode='test', ret_data=True)
+                idx_loader = DataLoader(
+                    idx_dataset, batch_size=self.args["batch_size"], shuffle=False, num_workers=4)
                 vectors, _ = self.extract_prototype(idx_loader, net=net)
                 class_mean = np.mean(vectors, axis=0)
                 self._means.append(class_mean)
-
                 cov = np.cov(vectors, rowvar=False)
                 self._cov_matrix.append(cov)
                 variances = np.diagonal(cov)
@@ -974,12 +961,15 @@ class Learner(BaseLearner):
     def _compute_relations(self):
         old_means = np.array(self._means[:self._known_classes])
         new_means = np.array(self._means[self._known_classes:])
-        self._relations = np.argmax((old_means / np.linalg.norm(old_means, axis=1)[:, None]) @ (
-                new_means / np.linalg.norm(new_means, axis=1)[:, None]).T, axis=1) + self._known_classes
+        self._relations = np.argmax(
+            (old_means / np.linalg.norm(old_means, axis=1)[:, None]) @
+            (new_means / np.linalg.norm(new_means, axis=1)[:, None]).T,
+            axis=1
+        ) + self._known_classes
 
     def extract_prototype(self, loader, net=None):
         if net is None:
-            net = self._network.module if hasattr(self._network, "module") else self._network
+            net = self._get_model()
         net.eval()
         vectors, targets = [], []
         for _, _inputs, _targets in loader:
@@ -990,14 +980,15 @@ class Learner(BaseLearner):
         return np.concatenate(vectors), np.concatenate(targets)
 
     def _build_feature_set(self):
-        net = self._network.module if hasattr(self._network, "module") else self._network
+        net = self._get_model()
         self.vectors_train = []
         self.labels_train = []
         for class_idx in range(self._known_classes, self._total_classes):
-            data, targets, idx_dataset = self.data_manager.get_dataset(np.arange(class_idx, class_idx + 1),
-                                                                       source='train',
-                                                                       mode='test', ret_data=True)
-            idx_loader = DataLoader(idx_dataset, batch_size=self.args["batch_size"], shuffle=False, num_workers=4)
+            data, targets, idx_dataset = self.data_manager.get_dataset(
+                np.arange(class_idx, class_idx + 1),
+                source='train', mode='test', ret_data=True)
+            idx_loader = DataLoader(
+                idx_dataset, batch_size=self.args["batch_size"], shuffle=False, num_workers=4)
             vectors, _ = self.extract_prototype(idx_loader, net=net)
             self.vectors_train.append(vectors)
             self.labels_train.append([class_idx] * len(vectors))
@@ -1006,45 +997,36 @@ class Learner(BaseLearner):
             self.vectors_train.append(
                 self.vectors_train[new_idx - self._known_classes] - self._means[new_idx] + self._means[class_idx])
             self.labels_train.append([class_idx] * len(self.vectors_train[-1]))
-
         self.vectors_train = np.concatenate(self.vectors_train)
         self.labels_train = np.concatenate(self.labels_train)
         self._feature_trainset = FeatureDataset(self.vectors_train, self.labels_train)
-        self._feature_trainset = DataLoader(self._feature_trainset, batch_size=self.batch_size, shuffle=True, num_workers=num_workers)
+        self._feature_trainset = DataLoader(
+            self._feature_trainset, batch_size=self.batch_size, shuffle=True, num_workers=num_workers)
 
     def cali_weight(self, cali_pseudo_feature, model):
         model = model.module if hasattr(model, 'module') else model
-
         model = model.eval()
-
         W = (model.ac_model.fc[-1].weight.t()).float()
         R = copy.deepcopy(self.R.float())
-
         with torch.no_grad():
             pbar = tqdm(enumerate(cali_pseudo_feature), desc='Alignment', total=len(cali_pseudo_feature), unit='batch')
             for i, batch in pbar:
                 (_, data, label) = batch
                 features = data.to(self._device)
                 target = label.to(self._device)
-
                 new_activation = model.ac_model.fc[:2](features.float())
                 label_onehot = F.one_hot(target, self._total_classes).float()
-
                 output = model.ac_model.fc[-1](new_activation)
                 _, pred = output.topk(1, 1, True, True)
                 pred = pred.t()
                 correct = pred.eq(target.view(1, -1).expand_as(pred))
                 false_indices = (correct == False).view(-1).nonzero(as_tuple=False)
-
                 new_activation = new_activation[false_indices[:, 0]]
                 label_onehot = label_onehot[false_indices[:, 0]]
-
                 R = R - R @ new_activation.t() @ torch.pinverse(
                     torch.eye(new_activation.size(0)).to(self._device) +
                     new_activation @ R @ new_activation.t()) @ new_activation @ R
-
                 W = W + R @ new_activation.t() @ (label_onehot - new_activation @ W)
-
         print('numpy inverse')
         model.ac_model.fc[-1].weight = torch.nn.parameter.Parameter(torch.t(W.float()))
         self.R = R
@@ -1053,7 +1035,7 @@ class Learner(BaseLearner):
     def cls_align_calimodel(self, trainloader, in_features, hidden_size, out_dim):
         embedding_list = []
         label_list = []
-        net = self._network.module if hasattr(self._network, "module") else self._network
+        net = self._get_model()
         model = net.generate_fc(in_features, hidden_size, out_dim)
         model.fc[0].weight.data = net.ac_model.fc[0].weight.data
         assert torch.allclose(model.fc[0].weight.data, net.ac_model.fc[0].weight.data)
@@ -1071,7 +1053,6 @@ class Learner(BaseLearner):
                 embedding_list.append(new_activation.cpu())
                 auto_cor += torch.t(new_activation) @ new_activation
                 crs_cor += torch.t(new_activation) @ y_tensor
-
         embedding_list = torch.cat(embedding_list, dim=0)
         label_list = torch.cat(label_list, dim=0)
         ridge = self.optimise_ridge_parameter(embedding_list, label_list)
@@ -1083,10 +1064,9 @@ class Learner(BaseLearner):
         return model
 
     def cali_prototye_model(self, train_loader):
-        net = self._network.module if hasattr(self._network, "module") else self._network
+        net = self._get_model()
         with torch.no_grad():
             old_vectors, vectors, targets = [], [], []
-
             pbar = tqdm(enumerate(train_loader), desc='cali_prototye_model', total=len(train_loader), unit='batch')
             for i, batch in pbar:
                 (_, data, label) = batch
@@ -1099,7 +1079,6 @@ class Learner(BaseLearner):
         E_new = np.concatenate(vectors)
         X_tensor = torch.from_numpy(E_old).to(torch.float32)
         y_tensor = torch.from_numpy(E_new).to(torch.float32)
-
         dataset = TensorDataset(X_tensor, y_tensor)
         total_size = len(dataset)
         train_size = int(0.9 * total_size)
@@ -1114,7 +1093,6 @@ class Learner(BaseLearner):
         optimizer = optim.SGD(calimodel.parameters(), momentum=0.9, lr=0.01, weight_decay=0.0005)
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=0)
         prog_bar = tqdm(range(1000))
-
         best_loss = float('inf')
         best_model_wts = None
         logging.info("开始 修正 prototype")
@@ -1139,7 +1117,6 @@ class Learner(BaseLearner):
                     logits = calimodel(inputs)
                     criterion = nn.MSELoss()
                     test_loss += criterion(logits, targets).item() * inputs.size(0)
-
             test_loss /= len(test_dataset)
             if test_loss < best_loss:
                 best_loss = test_loss
