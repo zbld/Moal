@@ -31,6 +31,9 @@ class SimpleNN(nn.Module):
             x = x.to(dtype=self.fc.weight.dtype)  
         x = self.fc(x)  
         return x  
+    
+    #### 用于将模型转换为指定的数据类型
+    
 class Learner(BaseLearner):
     def __init__(self, args):
         super().__init__(args)
