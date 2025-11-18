@@ -31,3 +31,119 @@
 2025-11-18 08:10:12,425 [trainer.py] => All params: 86988288
 2025-11-18 08:10:12,425 [trainer.py] => Trainable params: 1189632
 2025-11-18 08:10:12,425 [adapt_ac_com_sdc_EMA_auto.py] => Learning on 0-10
+2025-11-18 08:41:05,820 [adapt_ac_com_sdc_EMA_auto.py] => Task 0, Epoch 80/80 => Loss 0.273, Train_accy 93.56, Test_accy 95.27
+2025-11-18 08:41:37,723 [adapt_ac_com_sdc_EMA_auto.py] => gamma 10000.0
+2025-11-18 08:41:52,450 [trainer.py] => No NME accuracy.
+2025-11-18 08:41:52,450 [trainer.py] => CNN: {'total': 94.32, '00-09': 94.32, 'old': 0, 'new': 94.32}
+2025-11-18 08:41:52,450 [trainer.py] => CNN top1 curve: [94.32]
+2025-11-18 08:41:52,450 [trainer.py] => CNN top5 curve: [100.0]
+
+2025-11-18 08:41:52,450 [trainer.py] => Average Accuracy (CNN): 94.32 
+
+2025-11-18 08:41:52,451 [trainer.py] => All params: 89329969
+2025-11-18 08:41:52,452 [trainer.py] => Trainable params: 3531313
+2025-11-18 08:41:52,452 [adapt_ac_com_sdc_EMA_auto.py] => Learning on 10-20
+2025-11-18 09:22:13,488 [adapt_ac_com_sdc_EMA_auto.py] => Task 1, Epoch 80/80 => Loss 0.291, Train_accy 92.54, Test_accy 51.52
+2025-11-18 09:23:01,416 [adapt_ac_com_sdc_EMA_auto.py] => 开始 修正 prototype
+2025-11-18 09:23:46,438 [adapt_ac_com_sdc_EMA_auto.py] => best_loss: 0.11539879519688456
+2025-11-18 09:24:27,757 [trainer.py] => No NME accuracy.
+2025-11-18 09:24:27,757 [trainer.py] => CNN: {'total': 90.86, '00-09': 89.91, '10-19': 91.67, 'old': 89.91, 'new': 91.67}
+2025-11-18 09:24:27,757 [trainer.py] => CNN top1 curve: [94.32, 90.86]
+2025-11-18 09:24:27,757 [trainer.py] => CNN top5 curve: [100.0, 98.26]
+
+2025-11-18 09:24:27,757 [trainer.py] => Average Accuracy (CNN): 92.59 
+
+2025-11-18 09:24:27,758 [trainer.py] => All params: 89367649
+2025-11-18 09:24:27,759 [trainer.py] => Trainable params: 1264993
+2025-11-18 09:24:27,759 [adapt_ac_com_sdc_EMA_auto.py] => Learning on 20-30
+2025-11-18 10:02:55,223 [adapt_ac_com_sdc_EMA_auto.py] => Task 2, Epoch 80/80 => Loss 0.353, Train_accy 90.67, Test_accy 39.43
+2025-11-18 10:03:34,772 [adapt_ac_com_sdc_EMA_auto.py] => 开始 修正 prototype
+2025-11-18 10:04:10,821 [adapt_ac_com_sdc_EMA_auto.py] => best_loss: 0.17524635610057088
+2025-11-18 10:04:50,101 [trainer.py] => No NME accuracy.
+2025-11-18 10:04:50,101 [trainer.py] => CNN: {'total': 88.57, '00-09': 86.44, '10-19': 89.78, '20-29': 89.33, 'old': 88.24, 'new': 89.33}
+2025-11-18 10:04:50,101 [trainer.py] => CNN top1 curve: [94.32, 90.86, 88.57]
+2025-11-18 10:04:50,101 [trainer.py] => CNN top5 curve: [100.0, 98.26, 97.37]
+
+2025-11-18 10:04:50,101 [trainer.py] => Average Accuracy (CNN): 91.25 
+
+2025-11-18 10:04:50,102 [trainer.py] => All params: 89405329
+2025-11-18 10:04:50,103 [trainer.py] => Trainable params: 1302673
+2025-11-18 10:04:50,103 [adapt_ac_com_sdc_EMA_auto.py] => Learning on 30-40
+2025-11-18 10:50:00,219 [adapt_ac_com_sdc_EMA_auto.py] => Task 3, Epoch 80/80 => Loss 0.376, Train_accy 89.63, Test_accy 37.24
+2025-11-18 10:50:42,994 [adapt_ac_com_sdc_EMA_auto.py] => 开始 修正 prototype
+2025-11-18 10:51:24,512 [adapt_ac_com_sdc_EMA_auto.py] => best_loss: 0.13764368842786817
+2025-11-18 10:52:09,367 [trainer.py] => No NME accuracy.
+2025-11-18 10:52:09,368 [trainer.py] => CNN: {'total': 86.98, '00-09': 85.17, '10-19': 87.9, '20-29': 87.33, '30-39': 87.35, 'old': 86.86, 'new': 87.35}
+2025-11-18 10:52:09,368 [trainer.py] => CNN top1 curve: [94.32, 90.86, 88.57, 86.98]
+2025-11-18 10:52:09,368 [trainer.py] => CNN top5 curve: [100.0, 98.26, 97.37, 97.05]
+
+2025-11-18 10:52:09,368 [trainer.py] => Average Accuracy (CNN): 90.1825 
+
+2025-11-18 10:52:09,368 [trainer.py] => All params: 89443009
+2025-11-18 10:52:09,369 [trainer.py] => Trainable params: 1340353
+2025-11-18 10:52:09,369 [adapt_ac_com_sdc_EMA_auto.py] => Learning on 40-50
+2025-11-18 11:36:27,718 [adapt_ac_com_sdc_EMA_auto.py] => Task 4, Epoch 80/80 => Loss 0.434, Train_accy 88.74, Test_accy 36.54
+2025-11-18 11:37:04,034 [adapt_ac_com_sdc_EMA_auto.py] => 开始 修正 prototype
+2025-11-18 11:37:37,955 [adapt_ac_com_sdc_EMA_auto.py] => best_loss: 0.22246921102742892
+2025-11-18 11:38:21,469 [trainer.py] => No NME accuracy.
+2025-11-18 11:38:21,470 [trainer.py] => CNN: {'total': 86.14, '00-09': 84.86, '10-19': 86.83, '20-29': 85.33, '30-39': 86.14, '40-49': 87.42, 'old': 85.84, 'new': 87.42}
+2025-11-18 11:38:21,470 [trainer.py] => CNN top1 curve: [94.32, 90.86, 88.57, 86.98, 86.14]
+2025-11-18 11:38:21,470 [trainer.py] => CNN top5 curve: [100.0, 98.26, 97.37, 97.05, 96.36]
+
+2025-11-18 11:38:21,470 [trainer.py] => Average Accuracy (CNN): 89.374 
+
+2025-11-18 11:38:21,470 [trainer.py] => All params: 89480689
+2025-11-18 11:38:21,471 [trainer.py] => Trainable params: 1378033
+2025-11-18 11:38:21,471 [adapt_ac_com_sdc_EMA_auto.py] => Learning on 50-60
+2025-11-18 12:29:42,718 [adapt_ac_com_sdc_EMA_auto.py] => Task 5, Epoch 80/80 => Loss 0.316, Train_accy 91.87, Test_accy 32.43
+2025-11-18 12:30:22,639 [adapt_ac_com_sdc_EMA_auto.py] => 开始 修正 prototype
+2025-11-18 12:31:04,784 [adapt_ac_com_sdc_EMA_auto.py] => best_loss: 0.1784883484840393
+2025-11-18 12:31:53,849 [trainer.py] => No NME accuracy.
+2025-11-18 12:31:53,849 [trainer.py] => CNN: {'total': 84.48, '00-09': 84.23, '10-19': 83.87, '20-29': 83.33, '30-39': 85.54, '40-49': 85.43, '50-59': 84.54, 'old': 84.47, 'new': 84.54}
+2025-11-18 12:31:53,849 [trainer.py] => CNN top1 curve: [94.32, 90.86, 88.57, 86.98, 86.14, 84.48]
+2025-11-18 12:31:53,849 [trainer.py] => CNN top5 curve: [100.0, 98.26, 97.37, 97.05, 96.36, 95.43]
+
+2025-11-18 12:31:53,849 [trainer.py] => Average Accuracy (CNN): 88.55833333333334 
+
+2025-11-18 12:31:53,850 [trainer.py] => All params: 89518369
+2025-11-18 12:31:53,851 [trainer.py] => Trainable params: 1415713
+2025-11-18 12:31:53,851 [adapt_ac_com_sdc_EMA_auto.py] => Learning on 60-70
+2025-11-18 13:25:43,333 [adapt_ac_com_sdc_EMA_auto.py] => Task 6, Epoch 80/80 => Loss 0.386, Train_accy 89.07, Test_accy 29.12
+2025-11-18 13:26:22,498 [adapt_ac_com_sdc_EMA_auto.py] => 开始 修正 prototype
+2025-11-18 13:27:03,225 [adapt_ac_com_sdc_EMA_auto.py] => best_loss: 0.17910961375748816
+2025-11-18 13:27:54,336 [trainer.py] => No NME accuracy.
+2025-11-18 13:27:54,336 [trainer.py] => CNN: {'total': 83.42, '00-09': 84.86, '10-19': 83.6, '20-29': 82.0, '30-39': 84.64, '40-49': 84.11, '50-59': 83.55, '60-69': 80.87, 'old': 83.81, 'new': 80.87}
+2025-11-18 13:27:54,336 [trainer.py] => CNN top1 curve: [94.32, 90.86, 88.57, 86.98, 86.14, 84.48, 83.42]
+2025-11-18 13:27:54,336 [trainer.py] => CNN top5 curve: [100.0, 98.26, 97.37, 97.05, 96.36, 95.43, 94.65]
+
+2025-11-18 13:27:54,336 [trainer.py] => Average Accuracy (CNN): 87.82428571428571 
+
+2025-11-18 13:27:54,337 [trainer.py] => All params: 89556049
+2025-11-18 13:27:54,338 [trainer.py] => Trainable params: 1453393
+2025-11-18 13:27:54,338 [adapt_ac_com_sdc_EMA_auto.py] => Learning on 70-80
+2025-11-18 14:22:13,479 [adapt_ac_com_sdc_EMA_auto.py] => Task 7, Epoch 80/80 => Loss 0.281, Train_accy 93.36, Test_accy 26.90
+2025-11-18 14:22:48,940 [adapt_ac_com_sdc_EMA_auto.py] => 开始 修正 prototype
+2025-11-18 14:23:24,538 [adapt_ac_com_sdc_EMA_auto.py] => best_loss: 0.23383414909380293
+2025-11-18 14:24:15,740 [trainer.py] => No NME accuracy.
+2025-11-18 14:24:15,740 [trainer.py] => CNN: {'total': 82.35, '00-09': 82.65, '10-19': 82.8, '20-29': 82.0, '30-39': 83.13, '40-49': 82.78, '50-59': 82.57, '60-69': 79.19, '70-79': 83.52, 'old': 82.2, 'new': 83.52}
+2025-11-18 14:24:15,740 [trainer.py] => CNN top1 curve: [94.32, 90.86, 88.57, 86.98, 86.14, 84.48, 83.42, 82.35]
+2025-11-18 14:24:15,740 [trainer.py] => CNN top5 curve: [100.0, 98.26, 97.37, 97.05, 96.36, 95.43, 94.65, 94.08]
+
+2025-11-18 14:24:15,740 [trainer.py] => Average Accuracy (CNN): 87.14 
+
+2025-11-18 14:24:15,741 [trainer.py] => All params: 89593729
+2025-11-18 14:24:15,741 [trainer.py] => Trainable params: 1491073
+2025-11-18 14:24:15,741 [adapt_ac_com_sdc_EMA_auto.py] => Learning on 80-90
+2025-11-18 15:29:14,421 [adapt_ac_com_sdc_EMA_auto.py] => Task 8, Epoch 80/80 => Loss 0.300, Train_accy 91.53, Test_accy 26.50
+2025-11-18 15:29:59,219 [adapt_ac_com_sdc_EMA_auto.py] => 开始 修正 prototype
+2025-11-18 15:30:45,534 [adapt_ac_com_sdc_EMA_auto.py] => best_loss: 0.13591435908431737
+2025-11-18 15:31:46,846 [trainer.py] => No NME accuracy.
+2025-11-18 15:31:46,846 [trainer.py] => CNN: {'total': 81.02, '00-09': 82.97, '10-19': 82.26, '20-29': 80.33, '30-39': 82.23, '40-49': 81.46, '50-59': 80.59, '60-69': 77.52, '70-79': 82.42, '80-89': 79.03, 'old': 81.27, 'new': 79.03}
+2025-11-18 15:31:46,846 [trainer.py] => CNN top1 curve: [94.32, 90.86, 88.57, 86.98, 86.14, 84.48, 83.42, 82.35, 81.02]
+2025-11-18 15:31:46,847 [trainer.py] => CNN top5 curve: [100.0, 98.26, 97.37, 97.05, 96.36, 95.43, 94.65, 94.08, 93.77]
+
+2025-11-18 15:31:46,847 [trainer.py] => Average Accuracy (CNN): 86.46 
+
+2025-11-18 15:31:46,847 [trainer.py] => All params: 89631409
+2025-11-18 15:31:46,848 [trainer.py] => Trainable params: 1528753
+2025-11-18 15:31:46,848 [adapt_ac_com_sdc_EMA_auto.py] => Learning on 90-100

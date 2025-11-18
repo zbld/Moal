@@ -5,8 +5,8 @@
     "memory_per_class": 0,
     "fixed_memory": false,
     "shuffle": true,
-    "init_cls":10,
-    "increment": 10,
+    "init_cls":20,
+    "increment": 20,
     "model_name": "adapt_ac_com_sdc_ema_auto",
     "backbone_type": "pretrained_vit_b16_224_adapter",
     "device": [
@@ -15,10 +15,10 @@
     "seed": [
         1993
     ],
-    "Hidden": 3000,
-    "rg": 0.1,
-    "lambda_fkd": 1,
-    "cali_weight": 1.0,
+    "Hidden": 20000,
+    "rg": 0,
+    "lambda_fkd": 0,
+    "cali_weight": 0,
     "alpha": 0.999,
     "tuned_epoch": 80,
     "progreesive_epoch": 80,
@@ -32,3 +32,6 @@
     "vpt_type": "shallow",
     "prompt_token_num": 5
 }
+
+
+
