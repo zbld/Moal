@@ -5,17 +5,17 @@
     "memory_per_class": 0,
     "fixed_memory": false,
     "shuffle": true,
-    "init_cls": 20,
-    "increment": 20,
+    "init_cls": 10,
+    "increment": 10,
     "model_name": "adapt_ac_com_sdc_ema_auto",
     "backbone_type": "pretrained_vit_b16_224_adapter",
     "device": [
-        "2"
+        "0"
     ],
     "seed": [
         1993
     ],
-    "Hidden": 20000,
+    "Hidden": 15000,
     "rg": 0.1,
     "lambda_fkd": 1,
     "cali_weight": 1.0,
