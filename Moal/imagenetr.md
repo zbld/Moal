@@ -16,9 +16,9 @@
         1993
     ],
     "Hidden": 20000,
-    "rg": 0.1,
-    "lambda_fkd": 1,
-    "cali_weight": 1.0,
+    "rg": 0,
+    "lambda_fkd": 0,
+    "cali_weight": 0,
     "alpha": 0.999,
     "tuned_epoch": 80,
     "progreesive_epoch": 80,

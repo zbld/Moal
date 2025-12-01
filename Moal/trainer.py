@@ -25,7 +25,18 @@ def _train(args):
     if not os.path.exists(logs_name):
         os.makedirs(logs_name)
 
-    logfilename = "logs/{}/{}/{}/{}/{}/{}_{}_{}_test".format(
+
+    # 进行消融实验，生成不同的log
+    p_fkd = args.get("lambda_fkd", 0)
+    p_alpha = args.get("alpha", 0)
+    p_cali = args.get("cali_weight", 0)
+    p_rg = args.get("rg", 0)
+
+    # 生成类似 "_fkd1_alpha0.999_cw1.0_rg0.1" 的后缀
+    ablation_suffix = "_fkd{}_alpha{}_cw{}_rg{}".format(p_fkd, p_alpha, p_cali, p_rg)
+    
+    # --- 修改：将后缀加入文件名 ---
+    logfilename = "logs/{}/{}/{}/{}/{}/{}_{}_{}{}_test".format(
         args["model_name"],
         args["dataset"],
         args["Hidden"],
@@ -34,6 +45,7 @@ def _train(args):
         args["prefix"],
         args["seed"],
         args["backbone_type"],
+        ablation_suffix  # <--- 这里加入后缀
     )
 
     logging.basicConfig(
