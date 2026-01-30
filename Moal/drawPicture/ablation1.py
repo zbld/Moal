@@ -1,165 +1,124 @@
 import os
-import re
-import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-# ================= 配置区域 =================
-BASE_DIR = "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto"
-DATASET = "imagenetr"
-TOTAL_CLS = 200
-
-# 任务设置 (列)
-TASKS_CONFIG = {
-    "T=10": {"tasks": 10, "step": 20},
-    "T=5":  {"tasks": 5,  "step": 40}
-}
-
-# 实验映射 (行)
-# key: 实验描述
-# hidden_id: 对应的文件夹名
-# ticks: (KD, Interp, Rumination) 三列的勾选状态
-EXPERIMENTS = [
-    {
-        "name": "ACIL (Baseline)", # 表格第一行，通常引用论文数据
-        "hidden_id": None,         # 如果您跑了 Baseline 请填入 ID，否则使用硬编码数值
-        "ticks": ["", "", ""],
-        "hardcoded_values": {"T=10": 81.21, "T=5": 83.36} # 论文原值
-    },
-    {
-        "name": "Only KD",
-        "hidden_id": 20001,
-        "ticks": ["✔", "", ""],
-        "hardcoded_values": None
-    },
-    {
-        "name": "Only Weight Interp",
-        "hidden_id": 20002,
-        "ticks": ["", "✔", ""],
-        "hardcoded_values": None
-    },
-    {
-        "name": "KD + Rumination (No Interp)",
-        "hidden_id": 20003,
-        "ticks": ["✔", "", "✔"],
-        "hardcoded_values": None
-    },
-    {
-        "name": "MoAL (Ours)",
-        "hidden_id": 20004, # 或者 20000
-        "ticks": ["", "✔", "✔"], # 对应表格最后一行的勾选状态
-        "hardcoded_values": None
-    }
+# === 1. 定义文件路径 ===
+# Task=10 (Increment=20) 的文件列表，保持您提供的顺序
+files_t10_raw = [
+    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/20/reproduce_1993_pretrained_vit_b16_224_adapter_fkd0_alpha0_cw0_rg0_test.log",
+    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/20/reproduce_1993_pretrained_vit_b16_224_adapter_fkd0_alpha0.999_cw0_rg0_test.log",
+    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/20/reproduce_1993_pretrained_vit_b16_224_adapter_fkd0_alpha0.999_cw1_rg0.1_test.log",
+    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/20/reproduce_1993_pretrained_vit_b16_224_adapter_fkd1_alpha0_cw0_rg0_test.log",
+    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/20/reproduce_1993_pretrained_vit_b16_224_adapter_fkd1_alpha0_cw1_rg0.1_test.log"
 ]
-# ===========================================
 
-def get_avg_accuracy(hidden_id, step_size):
-    """读取指定 hidden_id 和 step_size 的日志并计算平均准确率"""
-    if hidden_id is None:
-        return None
-        
-    # 路径构建: dataset / hidden / 0 / step
-    log_dir = os.path.join(BASE_DIR, DATASET, str(hidden_id), "0", str(step_size))
-    
-    # 尝试找到日志文件
-    target_file = None
-    if os.path.exists(log_dir):
-        # 优先找名为 step 的文件
-        f_path = os.path.join(log_dir, str(step_size))
-        if os.path.isfile(f_path):
-            target_file = f_path
-        else:
-            # 找第一个非代码文件
-            for f in os.listdir(log_dir):
-                if not f.endswith('.py') and not f.endswith('.json'):
-                    target_file = os.path.join(log_dir, f)
-                    break
-    
-    if target_file and os.path.exists(target_file):
-        try:
-            with open(target_file, 'r', encoding='utf-8', errors='ignore') as f:
-                lines = f.readlines()
-                for line in reversed(lines):
-                    if "CNN top1 curve:" in line:
-                        match = re.search(r"CNN top1 curve:\s*(\[.*?\])", line)
-                        if match:
-                            acc_list = eval(match.group(1))
-                            return np.mean(acc_list)
-        except:
-            pass
-            
-    return None
+# Task=5 (Increment=40) 的文件列表，保持您提供的顺序
+files_t5_raw = [
+    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/40/reproduce_1993_pretrained_vit_b16_224_adapter_fkd0_alpha0_cw0_rg0_test.log",
+    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/40/reproduce_1993_pretrained_vit_b16_224_adapter_fkd0_alpha0.999_cw0_rg0_test.log",
+    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/40/reproduce_1993_pretrained_vit_b16_224_adapter_fkd0_alpha0.999_cw1.0_rg0.1_test.log",
+    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/40/reproduce_1993_pretrained_vit_b16_224_adapter_fkd1_alpha0_cw0_rg0_test.log",
+    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/40/reproduce_1993_pretrained_vit_b16_224_adapter_fkd1_alpha0_cw1.0_rg0.1_test.log"
+]
 
-def main():
-    # 1. 准备数据表格
-    # 列: KD, Interp, Rumination, ImgR(T=10), ImgR(T=5)
-    table_data = []
+# === 2. 数据提取函数 ===
+def extract_accuracy(filepath):
+    acc = "N/A"
+    if not os.path.exists(filepath):
+        print(f"Warning: File not found: {filepath}")
+        return acc
     
-    print(f"开始提取 ImageNet-R ({DATASET}) 的消融实验数据...")
-    
-    for exp in EXPERIMENTS:
-        row = list(exp['ticks']) # Start with ticks
-        
-        # 获取 T=10 的数据
-        val_t10 = None
-        if exp['hardcoded_values']:
-            val_t10 = exp['hardcoded_values'].get("T=10", "-")
-        else:
-            val = get_avg_accuracy(exp['hidden_id'], TASKS_CONFIG["T=10"]["step"])
-            val_t10 = f"{val:.2f}" if val is not None else "N/A"
-            print(f"  - {exp['name']} (T=10): {val_t10}")
-            
-        # 获取 T=5 的数据
-        val_t5 = None
-        if exp['hardcoded_values']:
-            val_t5 = exp['hardcoded_values'].get("T=5", "-")
-        else:
-            val = get_avg_accuracy(exp['hidden_id'], TASKS_CONFIG["T=5"]["step"])
-            val_t5 = f"{val:.2f}" if val is not None else "N/A"
-            print(f"  - {exp['name']} (T=5): {val_t5}")
-            
-        row.append(val_t10)
-        row.append(val_t5)
-        table_data.append(row)
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+            # 查找最后出现的 "Average Accuracy (CNN):"
+            for line in lines:
+                if "Average Accuracy (CNN):" in line:
+                    # 格式如: ... Average Accuracy (CNN): 63.10400...
+                    parts = line.split("Average Accuracy (CNN):")
+                    if len(parts) > 1:
+                        try:
+                            val = float(parts[1].strip())
+                            acc = f"{val:.2f}" # 保留两位小数
+                        except ValueError:
+                            pass
+    except Exception as e:
+        print(f"Error reading {filepath}: {e}")
+    return acc
 
-    # 2. 绘制表格
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.axis('off')
-    ax.axis('tight')
-    
-    # 列名
-    col_labels = [
-        "Knowledge\nDistillation", 
-        "Weight\nInterpolation", 
-        "Knowledge\nRumination", 
-        "ImageNet-R\n(T=10)", 
-        "ImageNet-R\n(T=5)"
-    ]
-    
-    # 创建表格
-    table = ax.table(
-        cellText=table_data,
-        colLabels=col_labels,
-        loc='center',
-        cellLoc='center'
-    )
-    
-    # 3. 样式美化
-    table.auto_set_font_size(False)
-    table.set_fontsize(11)
-    table.scale(1.2, 2.0) # 调整行高
-    
-    # 加粗最后一行的数字 (Ours)
-    for col_idx in range(len(col_labels)):
-        cell = table[(len(table_data), col_idx)] # (行索引从1开始算header, 所以最后一行是 len)
-        cell.set_text_props(weight='bold')
+# === 3. 数据处理与排序 ===
+# 根据您的文件列表顺序：
+# Index 0: fkd0_alpha0_cw0 (Baseline)
+# Index 1: fkd0_alpha0.999_cw0 (Weight Interpolation)
+# Index 2: fkd0_alpha0.999_cw1 (Weight Interpolation + Rumination)
+# Index 3: fkd1_alpha0_cw0 (Knowledge Distillation)
+# Index 4: fkd1_alpha0_cw1 (Knowledge Distillation + Rumination)
 
-    # 设置标题
-    plt.title("Table 2. Ablation study on ImageNet-R (Average Incremental Accuracy %)", y=1.1, fontsize=12)
-    
-    output_filename = "ablation_study_imagenetr.png"
-    plt.savefig(output_filename, dpi=300, bbox_inches='tight')
-    print(f"\n表格已生成: {output_filename}")
+# 目标表格的行顺序通常为：
+# Row 1: Baseline (No checks) -> 对应 Index 0
+# Row 2: KD (check 1) -> 对应 Index 3
+# Row 3: WI (check 2) -> 对应 Index 1
+# Row 4: KD + KR (check 1, 3) -> 对应 Index 4
+# Row 5: WI + KR (check 2, 3) -> 对应 Index 2
 
-if __name__ == "__main__":
-    main()
+# 定义从文件列表到表格行的映射索引
+map_indices = [0, 3, 1, 4, 2]
+
+acc_t10_list = [extract_accuracy(f) for f in files_t10_raw]
+acc_t5_list = [extract_accuracy(f) for f in files_t5_raw]
+
+# 按表格顺序重新排列数据
+data_t10 = [acc_t10_list[i] for i in map_indices]
+data_t5 = [acc_t5_list[i] for i in map_indices]
+
+# === 4. 构建表格数据 ===
+# 表格各列的勾选状态 (✓)
+check_marks = [
+    ["", "", ""],           # Row 1: Baseline
+    ["✓", "", ""],          # Row 2: KD
+    ["", "✓", ""],          # Row 3: WI
+    ["✓", "", "✓"],         # Row 4: KD + KR
+    ["", "✓", "✓"]          # Row 5: WI + KR
+]
+
+# 准备绘图数据
+table_data = []
+for i in range(5):
+    row = check_marks[i] + [data_t10[i], data_t5[i]]
+    table_data.append(row)
+
+columns = ["Knowledge\nDistillation", "Weight\nInterpolation", "Knowledge\nRumination", "T = 10", "T = 5"]
+
+# === 5. 绘制并保存图片 ===
+fig, ax = plt.subplots(figsize=(10, 4))
+ax.axis('off')
+
+# 创建表格
+table = ax.table(
+    cellText=table_data,
+    colLabels=columns,
+    cellLoc='center',
+    loc='center',
+    colColours=["#f2f2f2"] * 5 
+)
+
+# 调整表格样式
+table.auto_set_font_size(False)
+table.set_fontsize(12)
+table.scale(1, 2)  # 调整行高
+
+# 添加标题 (包含 Imagenet-R)
+plt.title("Ablation study on Imagenet-R (Reproduced)", pad=20, fontsize=14, fontweight='bold')
+
+# 添加额外的列头分组标注 (手动添加文本)
+# 坐标需要根据实际图形调整，这里是大致位置
+plt.text(0.73, 0.82, "Imagenet-R", transform=ax.transAxes, ha='center', fontsize=12, fontweight='bold')
+
+output_file = "ablation_study_imagenetr.png"
+plt.savefig(output_file, bbox_inches='tight', dpi=300)
+print(f"表格图片已保存为: {output_file}")
+print("-" * 30)
+print("提取的数据预览:")
+print("Row | KD | WI | KR | T=10 | T=5")
+for i, row in enumerate(table_data):
+    print(f" {i+1}  | {row[0]:<2} | {row[1]:<2} | {row[2]:<2} | {row[3]} | {row[4]}")

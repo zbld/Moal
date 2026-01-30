@@ -54,6 +54,12 @@ class Learner(BaseLearner):
         self.weight_decay = args["weight_decay"] if args["weight_decay"] is not None else 0.0005
         self.min_lr = args['min_lr'] if args['min_lr'] is not None else 1e-8
         self.args = args
+
+        # [MOD] 读取可生效的配置项（岭回归 gamma、特征蒸馏系数、校准步长）
+        self.ridge_gamma = args.get("rg", None)            # 固定岭回归参数（若提供则使用）
+        self.lambda_fkd = args.get("lambda_fkd", 0.0)      # 特征蒸馏损失系数
+        self.cali_step = args.get("cali_weight", 1.0)      # 选择性强化步长系数
+
         self.R = None
         self._means = []
         self._cov_matrix = []
@@ -220,7 +226,20 @@ class Learner(BaseLearner):
                 logits = self._network(inputs)["train_logits"]
 
                 loss_ce = F.cross_entropy(logits, targets)
-                loss = loss_ce
+
+                # [MOD] 特征蒸馏损失（lambda_fkd）：约束当前任务的特征与旧模型特征接近，缓解漂移
+                kd_loss = torch.tensor(0.0, device=self._device)
+                if self.lambda_fkd > 0.0 and hasattr(self, "old_network_module_ptr"):
+                    with torch.no_grad():
+                        old_feats = self.old_network_module_ptr(inputs)["features"]
+                    new_feats = self._network(inputs)["features"]
+                    # 归一化后做 MSE，更稳健
+                    old_feats = F.normalize(old_feats, dim=1)
+                    new_feats = F.normalize(new_feats, dim=1)
+                    kd_loss = F.mse_loss(new_feats, old_feats)
+
+                # [MOD] 总损失包含 CE 与 lambda_fkd * KD
+                loss = loss_ce + self.lambda_fkd * kd_loss
 
                 optimizer.zero_grad()
                 loss.backward()
@@ -292,7 +311,11 @@ class Learner(BaseLearner):
         label_list = torch.cat(label_list, dim=0)
         Y = target2onehot(label_list, self._total_classes)
 
-        ridge = self.optimise_ridge_parameter(embedding_list, Y)
+        # [MOD] 岭回归参数优先使用配置 rg；未提供则网格搜索
+        if self.ridge_gamma is not None:
+            ridge = float(self.ridge_gamma)
+        else:
+            ridge = self.optimise_ridge_parameter(embedding_list, Y)
         logging.info("gamma {}".format(ridge))
 
         print('numpy inverse')
@@ -442,14 +465,21 @@ class Learner(BaseLearner):
                 correct = pred.eq(target.view(1, -1).expand_as(pred))
                 false_indices = (correct == False).view(-1).nonzero(as_tuple=False)
 
+                # [MOD] 若本批次全部预测正确，则跳过更新，避免奇异矩阵
+                if false_indices.numel() == 0:
+                    continue
+
                 new_activation = new_activation[false_indices[:, 0]]
                 label_onehot = label_onehot[false_indices[:, 0]]
 
-                R = R - R @ new_activation.t() @ torch.pinverse(
-                    torch.eye(new_activation.size(0)).to(self._device) +
-                    new_activation @ R @ new_activation.t()) @ new_activation @ R
+                # [MOD] 用 cali_step 缩放递归更新的步长，实现“校准权重系数”生效
+                beta = float(self.cali_step)
 
-                W = W + R @ new_activation.t() @ (label_onehot - new_activation @ W)
+                R = R - beta * (R @ new_activation.t() @ torch.pinverse(
+                    torch.eye(new_activation.size(0)).to(self._device) +
+                    new_activation @ R @ new_activation.t()) @ new_activation @ R)
+
+                W = W + beta * (R @ new_activation.t() @ (label_onehot - new_activation @ W))
 
         print('numpy inverse')
         model.ac_model.fc[-1].weight = torch.nn.parameter.Parameter(torch.t(W.float()))
@@ -482,7 +512,13 @@ class Learner(BaseLearner):
                 
         embedding_list= torch.cat(embedding_list, dim=0)
         label_list= torch.cat(label_list, dim=0)
-        ridge = self.optimise_ridge_parameter(embedding_list, label_list)
+
+        # [MOD] 岭回归参数优先使用配置 rg；未提供则网格搜索
+        if self.ridge_gamma is not None:
+            ridge = float(self.ridge_gamma)
+        else:
+            ridge = self.optimise_ridge_parameter(embedding_list, label_list)
+
         R = np.mat(auto_cor.cpu().numpy() + ridge * np.eye(model.fc[-1].weight.size(1))).I
         R = torch.tensor(R).float().to(self._device)
         Delta = R @ crs_cor
