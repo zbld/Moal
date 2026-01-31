@@ -58,6 +58,12 @@ class Learner(BaseLearner):
         self._means = []
         self._cov_matrix = []
         self._std_deviations_matrix = []
+        
+        # Extract ablation parameters once during initialization
+        self.lambda_fkd = args.get('lambda_fkd', 0)
+        self.alpha = args.get('alpha', 0)
+        self.cali_weight_param = args.get('cali_weight', 0)
+        self.rg = args.get('rg', 0)
 
     def after_task(self):
         self._known_classes = self._total_classes
@@ -157,8 +163,7 @@ class Learner(BaseLearner):
             self._compute_means()
             
             # Only execute reflection-based calibration if cali_weight > 0
-            cali_weight_param = self.args.get('cali_weight', 0)
-            if cali_weight_param > 0:
+            if self.cali_weight_param > 0:
                 self.cali_prototye_model(train_loader)
                 self._compute_relations()
                 self._build_feature_set()
@@ -215,11 +220,9 @@ class Learner(BaseLearner):
     def _progreessive_train(self, train_loader, test_loader, optimizer, scheduler):
         prog_bar = tqdm(range(self.args['progreesive_epoch']))
 
-
         EMA_model = self._network.copy().freeze()
-        alpha = self.args.get('alpha', 0)
-        lambda_fkd = self.args.get('lambda_fkd', 0)
-        rg = self.args.get('rg', 0)
+        # KD temperature for distillation
+        kd_temperature = 2.0
 
         for _, epoch in enumerate(prog_bar):
             self._network.train()
@@ -233,24 +236,25 @@ class Learner(BaseLearner):
                 loss = loss_ce
                 
                 # Add knowledge distillation loss if lambda_fkd > 0 and old_network exists
-                if lambda_fkd > 0 and self._old_network is not None:
+                if self.lambda_fkd > 0 and self._old_network is not None:
                     with torch.no_grad():
                         old_logits = self._old_network(inputs)["train_logits"]
-                    # KD loss on old classes
+                    # KD loss on old classes with temperature scaling
                     loss_kd = F.kl_div(
-                        F.log_softmax(logits[:, :self._known_classes] / 2, dim=1),
-                        F.softmax(old_logits[:, :self._known_classes] / 2, dim=1),
+                        F.log_softmax(logits[:, :self._known_classes] / kd_temperature, dim=1),
+                        F.softmax(old_logits[:, :self._known_classes] / kd_temperature, dim=1),
                         reduction='batchmean'
-                    ) * (2 ** 2)
-                    loss = loss + lambda_fkd * loss_kd
+                    ) * (kd_temperature ** 2)
+                    loss = loss + self.lambda_fkd * loss_kd
                 
                 # Add regularization loss if rg > 0 and old_network exists
-                if rg > 0 and self._old_network is not None:
+                if self.rg > 0 and self._old_network is not None:
                     loss_reg = 0
-                    for param, old_param in zip(self._network.backbones[0].parameters(), 
-                                               self._old_network.backbones[0].parameters()):
+                    with torch.no_grad():
+                        old_params = [p for p in self._old_network.backbones[0].parameters()]
+                    for param, old_param in zip(self._network.backbones[0].parameters(), old_params):
                         loss_reg += torch.sum((param - old_param) ** 2)
-                    loss = loss + rg * loss_reg
+                    loss = loss + self.rg * loss_reg
 
                 optimizer.zero_grad()
                 loss.backward()
@@ -262,9 +266,9 @@ class Learner(BaseLearner):
                 total += len(targets)
 
             # Only apply EMA if alpha > 0
-            if alpha > 0:
+            if self.alpha > 0:
                 for param, ema_param in zip(self._network.backbones[0].parameters(), EMA_model.backbones[0].parameters()):
-                    ema_param.data = alpha * ema_param.data + (1 - alpha) * param.data
+                    ema_param.data = self.alpha * ema_param.data + (1 - self.alpha) * param.data
 
             scheduler.step()
             train_acc = np.around(tensor2numpy(correct) * 100 / total, decimals=2)
@@ -281,7 +285,7 @@ class Learner(BaseLearner):
             prog_bar.set_description(info)
 
         # Only copy EMA model back if alpha > 0
-        if alpha > 0:
+        if self.alpha > 0:
             for param, ema_param in zip(EMA_model.backbones[0].parameters(),
                                         self._network.backbones[0].parameters()):
                 ema_param.data =  param.data
