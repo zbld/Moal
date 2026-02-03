@@ -111,8 +111,8 @@ def main():
                 accuracies = parse_log_file(log_file)
                 if accuracies:
                     has_data_in_subplot = True
-                    # 生成 x 轴 (0 到 T-1)
-                    x_axis = range(len(accuracies))
+                    # 生成 x 轴: 类别数 = (task_index + 1) * step_size
+                    x_axis = [(i + 1) * step_size for i in range(len(accuracies))]
                     avg_acc = np.mean(accuracies)
                     
                     print(f"  - [T={t}, Step={step_size}] 找到日志: {os.path.basename(log_file)}, Avg Acc={avg_acc:.2f}%")
@@ -130,7 +130,7 @@ def main():
 
         # 子图设置
         ax.set_title(label_name, fontsize=14, fontweight='bold')
-        ax.set_xlabel("Task ID", fontsize=12)
+        ax.set_xlabel("Num of Classes", fontsize=12)
         ax.set_ylabel("Top-1 Accuracy (%)", fontsize=12)
         ax.grid(True, linestyle='--', alpha=0.5)
         if has_data_in_subplot:
