@@ -2,23 +2,27 @@ import os
 import matplotlib.pyplot as plt
 import pandas as pd
 
+# Get the base directory relative to this script's location
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_LOG_DIR = os.path.join(SCRIPT_DIR, "..", "..", "logs", "adapt_ac_com_sdc_ema_auto")
+
 # === 1. 定义文件路径 ===
 # Task=10 (Increment=20) 的文件列表，保持您提供的顺序
 files_t10_raw = [
-    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/20/reproduce_1993_pretrained_vit_b16_224_adapter_fkd0_alpha0_cw0_rg0_test.log",
-    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/20/reproduce_1993_pretrained_vit_b16_224_adapter_fkd0_alpha0.999_cw0_rg0_test.log",
-    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/20/reproduce_1993_pretrained_vit_b16_224_adapter_fkd0_alpha0.999_cw1_rg0.1_test.log",
-    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/20/reproduce_1993_pretrained_vit_b16_224_adapter_fkd1_alpha0_cw0_rg0_test.log",
-    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/20/reproduce_1993_pretrained_vit_b16_224_adapter_fkd1_alpha0_cw1_rg0.1_test.log"
+    os.path.join(BASE_LOG_DIR, "imagenetr/20000/0/20/reproduce_1993_pretrained_vit_b16_224_adapter_fkd0_alpha0_cw0_rg0_test.log"),
+    os.path.join(BASE_LOG_DIR, "imagenetr/20000/0/20/reproduce_1993_pretrained_vit_b16_224_adapter_fkd0_alpha0.999_cw0_rg0_test.log"),
+    os.path.join(BASE_LOG_DIR, "imagenetr/20000/0/20/reproduce_1993_pretrained_vit_b16_224_adapter_fkd0_alpha0.999_cw1_rg0.1_test.log"),
+    os.path.join(BASE_LOG_DIR, "imagenetr/20000/0/20/reproduce_1993_pretrained_vit_b16_224_adapter_fkd1_alpha0_cw0_rg0_test.log"),
+    os.path.join(BASE_LOG_DIR, "imagenetr/20000/0/20/reproduce_1993_pretrained_vit_b16_224_adapter_fkd1_alpha0_cw1_rg0.1_test.log")
 ]
 
 # Task=5 (Increment=40) 的文件列表，保持您提供的顺序
 files_t5_raw = [
-    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/40/reproduce_1993_pretrained_vit_b16_224_adapter_fkd0_alpha0_cw0_rg0_test.log",
-    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/40/reproduce_1993_pretrained_vit_b16_224_adapter_fkd0_alpha0.999_cw0_rg0_test.log",
-    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/40/reproduce_1993_pretrained_vit_b16_224_adapter_fkd0_alpha0.999_cw1.0_rg0.1_test.log",
-    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/40/reproduce_1993_pretrained_vit_b16_224_adapter_fkd1_alpha0_cw0_rg0_test.log",
-    "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/40/reproduce_1993_pretrained_vit_b16_224_adapter_fkd1_alpha0_cw1.0_rg0.1_test.log"
+    os.path.join(BASE_LOG_DIR, "imagenetr/20000/0/40/reproduce_1993_pretrained_vit_b16_224_adapter_fkd0_alpha0_cw0_rg0_test.log"),
+    os.path.join(BASE_LOG_DIR, "imagenetr/20000/0/40/reproduce_1993_pretrained_vit_b16_224_adapter_fkd0_alpha0.999_cw0_rg0_test.log"),
+    os.path.join(BASE_LOG_DIR, "imagenetr/20000/0/40/reproduce_1993_pretrained_vit_b16_224_adapter_fkd0_alpha0.999_cw1.0_rg0.1_test.log"),
+    os.path.join(BASE_LOG_DIR, "imagenetr/20000/0/40/reproduce_1993_pretrained_vit_b16_224_adapter_fkd1_alpha0_cw0_rg0_test.log"),
+    os.path.join(BASE_LOG_DIR, "imagenetr/20000/0/40/reproduce_1993_pretrained_vit_b16_224_adapter_fkd1_alpha0_cw1.0_rg0.1_test.log")
 ]
 
 # === 2. 数据提取函数 ===

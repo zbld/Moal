@@ -5,7 +5,9 @@ import numpy as np
 
 # ================= 配置区域 =================
 # 日志根目录
-BASE_DIR = "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto"
+# Get the path relative to this script's location
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.join(SCRIPT_DIR, "..", "..", "logs", "adapt_ac_com_sdc_ema_auto")
 
 # 数据集配置：名称, 总类别数, 任务数列表(T), Hidden层大小
 DATASET_CONFIGS = {
