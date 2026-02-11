@@ -4,7 +4,7 @@ import pandas as pd
 
 # Get the base directory relative to this script's location
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-BASE_LOG_DIR = os.path.join(SCRIPT_DIR, "..", "..", "logs", "adapt_ac_com_sdc_ema_auto")
+BASE_LOG_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "..", "logs", "adapt_ac_com_sdc_ema_auto"))
 
 # === 1. 定义文件路径 ===
 # Task=10 (Increment=20) 的文件列表，保持您提供的顺序

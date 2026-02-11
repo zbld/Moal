@@ -7,7 +7,7 @@ import numpy as np
 # 日志根目录
 # Get the path relative to this script's location
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-BASE_DIR = os.path.join(SCRIPT_DIR, "..", "..", "logs", "adapt_ac_com_sdc_ema_auto")
+BASE_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "..", "logs", "adapt_ac_com_sdc_ema_auto"))
 
 # 需要测试的 Hidden (Buffer Layer) 维度
 HIDDEN_DIMS = [3000, 5000, 10000, 15000, 20000]
