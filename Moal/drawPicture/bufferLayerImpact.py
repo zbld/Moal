@@ -5,6 +5,7 @@ import numpy as np
 
 # ================= 配置区域 =================
 # 日志根目录
+# /home/shihan/Moal/logs/adapt_ac_com_sdc_ema_auto/imagenetr/20000/0/20
 BASE_DIR = "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto"
 
 # 需要测试的 Hidden (Buffer Layer) 维度
