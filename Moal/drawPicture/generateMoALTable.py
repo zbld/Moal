@@ -26,8 +26,10 @@ import numpy as np
 from matplotlib.patches import Rectangle
 
 # ================= 配置区域 =================
-# 日志根目录
+# 日志根目录 - 可根据实际情况修改此路径
+# Log root directory - Modify this path according to your setup
 BASE_DIR = "/home/runner/work/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto"
+# 示例 Example: BASE_DIR = "/home/shihan/Moal/Moal/logs/adapt_ac_com_sdc_ema_auto"
 
 # 数据集配置：名称, 总类别数, 任务数列表(T), Hidden层大小
 DATASET_CONFIGS = {
