@@ -267,8 +267,8 @@ class Learner(BaseLearner):
 
             # Only apply EMA if alpha > 0
             if self.alpha > 0:
-                for param, ema_param in zip(self._network.backbones[0].parameters(), EMA_model.backbones[0].parameters()):
-                    ema_param.data = self.alpha * ema_param.data + (1 - self.alpha) * param.data
+                for net_param, ema_param in zip(self._network.backbones[0].parameters(), EMA_model.backbones[0].parameters()):
+                    ema_param.data = self.alpha * ema_param.data + (1 - self.alpha) * net_param.data
 
             scheduler.step()
             train_acc = np.around(tensor2numpy(correct) * 100 / total, decimals=2)
