@@ -1,3 +1,24 @@
+"""
+MoAL Performance Table Generator
+
+该脚本用于生成MoAL方法的性能表格，展示在不同数据集和任务配置下的指标。
+
+主要功能：
+1. 从日志文件中读取实验结果（使用与drawBasePicture.py相同的文件读取方式）
+2. 提取准确率曲线数据
+3. 计算两个关键指标：
+   - Ā (Average Incremental Accuracy): 平均增量准确率
+   - AT (Last-Task Accuracy): 最后任务准确率
+4. 生成格式化的表格图像和CSV文件
+
+使用方法：
+    python generateMoALTable.py
+
+输出文件：
+    - moal_table_results.png: 表格图像
+    - moal_table_results.csv: CSV格式数据
+"""
+
 import os
 import re
 import matplotlib.pyplot as plt
@@ -225,6 +246,16 @@ def generate_table_image(results):
     
     return table_data
 
+def save_table_csv(table_data, filename='moal_table_results.csv'):
+    """保存表格为CSV格式"""
+    import csv
+    
+    with open(filename, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerows(table_data)
+    
+    print(f"CSV文件已保存为: {filename}")
+
 def print_table_text(table_data):
     """以文本格式打印表格"""
     print("\n" + "="*100)
@@ -240,6 +271,9 @@ def main():
     
     print("\n生成表格图像...")
     table_data = generate_table_image(results)
+    
+    print("\n保存CSV文件...")
+    save_table_csv(table_data)
     
     print_table_text(table_data)
     
