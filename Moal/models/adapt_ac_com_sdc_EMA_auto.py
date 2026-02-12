@@ -286,9 +286,9 @@ class Learner(BaseLearner):
 
         # Only copy EMA model back if alpha > 0
         if self.alpha > 0:
-            for param, ema_param in zip(EMA_model.backbones[0].parameters(),
-                                        self._network.backbones[0].parameters()):
-                ema_param.data =  param.data
+            for ema_param, net_param in zip(EMA_model.backbones[0].parameters(),
+                                             self._network.backbones[0].parameters()):
+                net_param.data = ema_param.data
 
         logging.info(info)
 
