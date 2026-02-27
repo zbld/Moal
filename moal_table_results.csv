@@ -1,3 +1,4 @@
+数据集,来源,CIFAR-100,CIFAR-100,CIFAR-100,CIFAR-100,ImageNet-A,ImageNet-A,ImageNet-A,ImageNet-A,ImageNet-R,ImageNet-R,ImageNet-R,ImageNet-R,OmniBenchmark,OmniBenchmark,OmniBenchmark,OmniBenchmark
 Metric,Methods,T=20,T=10,T=5,avg.,T=20,T=10,T=5,avg.,T=20,T=10,T=5,avg.,T=30,T=15,T=10,avg.
 Ā,Finetune,84.40,87.52,90.51,87.48,46.06,50.45,57.23,51.25,71.14,74.94,78.15,74.74,67.70,72.05,73.30,71.02
 ,LwF (TPAMI 2018) [18],76.19,82.88,88.10,82.39,46.03,50.36,56.75,51.05,70.74,74.31,77.00,74.02,67.42,72.31,73.91,71.21

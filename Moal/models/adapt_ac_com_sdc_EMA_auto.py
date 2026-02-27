@@ -144,15 +144,19 @@ class Learner(BaseLearner):
             #     for name, param in self._network.named_parameters():
             #         if param.requires_grad:
             #             print(name, param.numel())
-            if self.args['optimizer'] == 'sgd':
-                optimizer = optim.SGD(self._network.parameters(), momentum=0.9, lr=self.progressive_lr,
-                                      weight_decay=self.weight_decay)
-            elif self.args['optimizer'] == 'adam':
-                optimizer = optim.AdamW(self._network.parameters(), lr=self.progressive_lr,
-                                        weight_decay=self.weight_decay)
-            scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.args['progreesive_epoch'],
-                                                             eta_min=self.min_lr)
-            self._progreessive_train(train_loader, test_loader, optimizer, scheduler)
+            # Only fine-tune adapter when at least one incremental training component is active.
+            # When alpha=0, lambda_fkd=0, and rg=0, all protection mechanisms are disabled,
+            # so fine-tuning would cause catastrophic forgetting. Skipping makes MoAL degrade to ACIL.
+            if self.lambda_fkd > 0 or self.alpha > 0 or self.rg > 0:
+                if self.args['optimizer'] == 'sgd':
+                    optimizer = optim.SGD(self._network.parameters(), momentum=0.9, lr=self.progressive_lr,
+                                          weight_decay=self.weight_decay)
+                elif self.args['optimizer'] == 'adam':
+                    optimizer = optim.AdamW(self._network.parameters(), lr=self.progressive_lr,
+                                            weight_decay=self.weight_decay)
+                scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.args['progreesive_epoch'],
+                                                                 eta_min=self.min_lr)
+                self._progreessive_train(train_loader, test_loader, optimizer, scheduler)
 
         if self._cur_task == 0:
             self._compute_means()

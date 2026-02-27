@@ -1,24 +1,3 @@
-"""
-MoAL Performance Table Generator
-
-该脚本用于生成MoAL方法的性能表格，展示在不同数据集和任务配置下的指标。
-
-主要功能：
-1. 从日志文件中读取MoAL实验结果
-2. 使用原文中其他方法的数据作为对比基准
-3. 计算两个关键指标：
-   - Ā (Average Incremental Accuracy): 平均增量准确率
-   - AT (Last-Task Accuracy): 最后任务准确率
-4. 生成格式化的表格图像和CSV文件，包含MoAL相对于最佳方法的提升
-
-使用方法：
-    python generateMoALTable.py
-
-输出文件：
-    - moal_table_results.png: 表格图像
-    - moal_table_results.csv: CSV格式数据
-"""
-
 import os
 import re
 import matplotlib.pyplot as plt
@@ -333,8 +312,8 @@ def collect_moal_data():
     return results
 
 def generate_table_image(moal_results):
-    """生成包含所有方法的完整表格图像"""
-    # 设置图表参数
+    """生成包含所有方法的完整表格图像，并在顶部新增一行标明数据集分组"""
+    # 设置图表��数
     fig, ax = plt.subplots(figsize=(20, 14))
     ax.axis('tight')
     ax.axis('off')
@@ -363,12 +342,19 @@ def generate_table_image(moal_results):
         "EASE (CVPR 2024) [53]"
     ]
     
-    # 准备表头
+    # 准备表头（第二行）
     header = ['Metric', 'Methods']
     for ds in datasets_order:
         for task in dataset_tasks[ds]:
             header.append(task)
         header.append('avg.')
+    
+    # 额外添加第一行：数据集分组
+    dataset_group_row = ['数据集', '来源']
+    for ds in datasets_order:
+        # 每个数据集对应 len(tasks)+1 列（含 avg.）
+        for _ in range(len(dataset_tasks[ds]) + 1):
+            dataset_group_row.append(ds)
     
     # 准备所有行数据
     all_rows = []
@@ -449,8 +435,8 @@ def generate_table_image(moal_results):
         metric_rows.append(improvement_row)
         all_rows.extend(metric_rows)
     
-    # 创建表格
-    table_data = [header] + all_rows
+    # 拼接表格数据：第一行数据集分组 + 第二行表头 + 其余行
+    table_data = [dataset_group_row, header] + all_rows
     
     # 创建matplotlib表格
     table = ax.table(cellText=table_data, cellLoc='center', loc='center',
@@ -461,14 +447,20 @@ def generate_table_image(moal_results):
     table.set_fontsize(7)
     table.scale(1, 1.8)
     
-    # 设置表头样式
-    for i in range(len(header)):
+    # 设置第一行（数据集分组）样式
+    for i in range(len(table_data[0])):
         cell = table[(0, i)]
-        cell.set_facecolor('#4472C4')
+        cell.set_facecolor('#305496')  # 深蓝
+        cell.set_text_props(weight='bold', color='white', fontsize=8)
+    
+    # 设置第二行（表头）样式
+    for i in range(len(header)):
+        cell = table[(1, i)]
+        cell.set_facecolor('#4472C4')  # 蓝色
         cell.set_text_props(weight='bold', color='white', fontsize=8)
     
     # 设置第一列样式（Metric列）
-    current_row = 1
+    current_row = 2  # 从指标行开始（跳过前两行）
     for metric_idx in range(2):  # Ā 和 AT
         cell = table[(current_row, 0)]
         cell.set_facecolor('#E7E6E6')
@@ -476,7 +468,7 @@ def generate_table_image(moal_results):
         current_row += len(baseline_methods) + 2  # 基准方法 + MoAL + improvement
     
     # 设置第二列样式（Methods列）
-    for i in range(1, len(table_data)):
+    for i in range(2, len(table_data)):
         cell = table[(i, 1)]
         cell.set_facecolor('#F8F8F8')
         
@@ -490,17 +482,17 @@ def generate_table_image(moal_results):
             cell.set_text_props(weight='bold', fontsize=7)
     
     # 高亮MoAL数据单元格
-    for row_idx in range(1, len(table_data)):
+    for row_idx in range(2, len(table_data)):
         if 'MoAL (Ours)' in table_data[row_idx][1]:
-            for col_idx in range(2, len(header)):
+            for col_idx in range(2, len(table_data[row_idx])):
                 cell = table[(row_idx, col_idx)]
                 cell.set_facecolor('#E6F3FF')
                 cell.set_text_props(weight='bold')
     
     # 高亮improvement单元格
-    for row_idx in range(1, len(table_data)):
+    for row_idx in range(2, len(table_data)):
         if 'improvement' in table_data[row_idx][1]:
-            for col_idx in range(2, len(header)):
+            for col_idx in range(2, len(table_data[row_idx])):
                 cell = table[(row_idx, col_idx)]
                 cell.set_facecolor('#FFF4E6')
                 cell.set_text_props(fontsize=7)
